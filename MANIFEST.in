@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include overtime *.css
+recursive-include overtime *.csv
+recursive-include overtime *.html
+recursive-include overtime *.ico
+recursive-include overtime *.js
+recursive-include overtime *.json
+recursive-include overtime *.md
+recursive-include overtime *.png
+recursive-include overtime *.py
+recursive-include overtime *.svg
+recursive-include overtime *.txt
+recursive-exclude overtime *.pyc
