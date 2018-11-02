@@ -31,6 +31,8 @@ class overtime(Document):
 		# if (self.between_days):
 		# 	if(int(self.between_days) >2 or int(self.between_days) < 0):
 		# 		frappe.throw(_("You cannot enter Overtime before Two days and Advanced"))
+		if float(self.total_rs) <= 0.0:
+			frappe.throw(_("Salary Structure is not created! Kindly call to HR Department"))
 
 		validate_existing_entry = validate_already_existed_entry(self.employee, self.date, self.name)
 		# frappe.throw(_(validate_existing_entry))

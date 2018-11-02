@@ -278,7 +278,7 @@ frappe.ui.form.on('overtime', {
 				callback: function(r) {
 					if (!r.exc && r.message) {
 						if(r.message == "False"){
-							frappe.throw(__("Sorry You have not permission to apply Over Time"))
+							frappe.throw(__("Sorry You/Employee have not permission to apply Over Time"))
 						}
 						
 					}
