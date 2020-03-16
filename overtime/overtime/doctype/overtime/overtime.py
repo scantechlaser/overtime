@@ -9,9 +9,11 @@ from frappe.model.document import Document
 from frappe.utils import cstr, flt, cint, getdate, now_datetime, formatdate, strip,time_diff_in_hours
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
-
-
-
+from frappe.utils import getdate
+import calendar
+from erpnext.hr.doctype.employee.employee import get_holiday_list_for_employee
+import datetime
+from datetime import *
 
 t_a = now_datetime()
 t_b = now_datetime()
@@ -64,7 +66,7 @@ def validate_amount(totalMinutes=0, employee=''):
 			frappe.throw(_("Not Applicable"))
 		else:
 			finalAmount = 0.0
-			my_sql = "SELECT * FROM `tabSalary Structure Employee` where employee = '"+employee+"'"
+			my_sql = "SELECT * FROM `tabSalary Structure Assignment` where employee = '"+employee+"' and base != 0 order by creation desc"
 			# frappe.throw(_(my_sql))
 			validate_amount = frappe.db.sql(my_sql,as_dict=True)
 			if validate_amount:
@@ -118,6 +120,12 @@ def validate_already_existed_entry(employee, date, name=''):
 
 
 @frappe.whitelist(allow_guest=True)
+def day(date):
+	a=calendar.weekday(year,month,day)
+	days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"]
+	frappe.throw(_(days[a]))
+
+@frappe.whitelist(allow_guest=True)
 def diff(t_a = '10:00', t_b = '15:00'):
 	in_time = t_a.split(':')
 	out_time = t_b.split(':')
@@ -137,3 +145,31 @@ def get_setting():
 
 	return frappe.get_single('Overtime Setting')
 
+
+@frappe.whitelist()
+def get_holidays(employee, date):
+	'''get holidays between two dates for the given employee'''
+
+	check = False
+	holiday_list = get_holiday_list_for_employee(employee)
+
+	holidays = frappe.db.sql("select DATE_FORMAT(holiday_date,'%Y-%m-%d') as date FROM `tabHoliday` WHERE parent = '"+holiday_list+"' ", as_dict=True)
+	if holidays:
+
+		for i in holidays:
+			holiday_date = str(i.date).split('-')
+			posting_date = str(date).split('-')
+
+			if int(posting_date[0]) == int(holiday_date[0]):
+
+				if int(posting_date[1]) == int(holiday_date[1]):
+
+					if int(posting_date[2]) == int(holiday_date[2]):
+
+						return True
+
+	return False
+
+			# else:
+			# 	return False
+	

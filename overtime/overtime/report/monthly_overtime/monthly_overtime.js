@@ -16,6 +16,8 @@ frappe.query_reports["Monthly Overtime"] = {
 			"fieldname":"year",
 			"label": __("Year"),
 			"fieldtype": "Select",
+			"options": "2018\n2019",
+			"default":"2019",
 			"reqd": 1
 		},
 		{
@@ -36,7 +38,7 @@ frappe.query_reports["Monthly Overtime"] = {
 
 	"onload": function() {
 		return  frappe.call({
-			method: "overtime.overtime.report.monthly_overtime.monthly_overtime.get_attendance_years",
+			method: "erpnext.hr.report.monthly_attendance_sheet.monthly_attendance_sheet.get_attendance_years",
 			callback: function(r) {
 				var year_filter = frappe.query_report_filters_by_name.year;
 				year_filter.df.options = r.message;

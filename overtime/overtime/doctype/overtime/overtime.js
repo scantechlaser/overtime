@@ -7,7 +7,7 @@ frappe.ui.form.on('overtime', {
 		// frm.trigger("validate_employee");
 	},
 	onload: function(frm) {
-
+		var dayDifference = '';
 		frm.set_query("employee", erpnext.queries.employee);
 
 		if (!frm.doc.date) {
@@ -15,6 +15,21 @@ frappe.ui.form.on('overtime', {
 			dayDifference = frappe.datetime.get_day_diff(frappe.datetime.get_today(), frm.doc.date );
 			
 			frm.set_value('between_days', dayDifference);
+
+			var gsDayNames = [
+				  'Sunday',
+				  'Monday',
+				  'Tuesday',
+				  'Wednesday',
+				  'Thursday',
+				  'Friday',
+				  'Saturday'
+				];
+
+				var d = new Date(frm.doc.date);
+				var dayName = gsDayNames[d.getDay()];
+				frm.set_value('day',dayName)
+				console.log(dayName);
 		}
 		
 	},
@@ -28,7 +43,6 @@ frappe.ui.form.on('overtime', {
 		frm.trigger("validate_time");
 
 	},
-
 	out_time: function(frm) {
 		
 		frm.trigger("calculate_total_ot_hours");
@@ -42,12 +56,11 @@ frappe.ui.form.on('overtime', {
 				method: "overtime.overtime.doctype.overtime.overtime.get_setting",
 				args: {
 
-					
 				},
 				callback: function(r) {
 
 					r.message;
-
+					var amountPerhour = 0;
 					var standardStartTime = moment(r.message.start_time, 'hh:mm:ss a');
 					var standardEndTimeOfCompany = moment(r.message.end_time, 'hh:mm:ss a');
 					var startTime = moment(frm.doc.in_time, 'hh:mm:ss a');
@@ -72,7 +85,7 @@ frappe.ui.form.on('overtime', {
 						max_ot_hours_in_minute = parseInt(standard_ot_hours[0] * 60) + parseInt(standard_ot_hours[1]);
 					}
 
-
+					
 
 					var calcualteOtInHours = r.message.if_overtime_based_on_hours;
 
@@ -93,13 +106,17 @@ frappe.ui.form.on('overtime', {
 
 						var standardDiff = endTime.diff(startTime, 'minute');
 					}
-
-					if(standardStartTime >= startTime & endTime > otIsApplicableAfter){
-
+					if(standardStartTime >= startTime & endTime > otIsApplicableAfter || frm.doc.day == 'Sunday' || frm.doc.is_holiday == 1){
+						console.log(2323);
 						var finalStartTime = moment(standardEndTimeOfCompany, 'hh:mm:ss a');
 						var finalEndTime = moment(frm.doc.out_time, 'hh:mm:ss a');
 						var finalDiff = finalEndTime.diff(finalStartTime, 'minute');
 
+						if(frm.doc.day == 'Sunday' || frm.doc.is_holiday == 1){
+							
+							var finalDiff = endTime.diff(startTime, 'minute');
+
+						}
 						var actualDiff = finalDiff;
 
 						
@@ -108,6 +125,7 @@ frappe.ui.form.on('overtime', {
 						if(max_ot_hours_in_minute > 0 && actualDiff > max_ot_hours_in_minute){
 							actualDiff = max_ot_hours_in_minute;
 						}
+
 						var num = actualDiff;
 						var hours = (num / 60);
 						var rhours = Math.floor(hours);
@@ -154,7 +172,7 @@ frappe.ui.form.on('overtime', {
 									        mins++;
 									    }
 									    var amount = (+hours + +mins/60) * amountPerhour;
-									
+										amount = parseFloat(amount).toFixed(2);
 										frm.set_value('total_rs', amount);
 									
 								}
@@ -168,8 +186,9 @@ frappe.ui.form.on('overtime', {
 
 					}
 
-					if(endTime > otIsApplicableAfter && standardDiff > timeInminutes)
+					if(endTime > otIsApplicableAfter && standardDiff > timeInminutes || frm.doc.day == 'Sunday' || frm.doc.is_holiday == 1)
 					{	
+						console.log(5678);
 
 						standardDiff = standardDiff - timeInminutes;
 
@@ -179,7 +198,10 @@ frappe.ui.form.on('overtime', {
 						}
 
 
-						
+						if(frm.doc.day=='Sunday' || frm.doc.is_holiday == 1){
+							
+							var finalDiff = startTime.diff(endTime, 'minute');
+						}
 
 						var num = standardDiff;
 						var hours = (num / 60);
@@ -238,7 +260,7 @@ frappe.ui.form.on('overtime', {
 										        mins++;
 										    }
 										    var amount = (+hours + +mins/60) * amountPerhour;
-										
+											amount = parseFloat(amount).toFixed(2);
 											frm.set_value('total_rs', amount);
 										
 									}
@@ -299,11 +321,50 @@ frappe.ui.form.on('overtime', {
 	},
 	date:function(frm){
 
+	
+		var dayDifference = '';
 		dayDifference = frappe.datetime.get_day_diff(frappe.datetime.get_today(), frm.doc.date );
-		// console.log(dayDifference);
+		
 		frm.set_value('between_days', dayDifference);
 
-		// alert(2323);
+		dayDifference = frappe.datetime.get_day_diff(frappe.datetime.get_today(), frm.doc.date );
+		
+		frm.set_value('between_days', dayDifference);
+
+		var gsDayNames = [
+			  'Sunday',
+			  'Monday',
+			  'Tuesday',
+			  'Wednesday',
+			  'Thursday',
+			  'Friday',
+			  'Saturday'
+			];
+
+		var d = new Date(frm.doc.date);
+		var dayName = gsDayNames[d.getDay()];
+		frm.set_value('day',dayName);
+
+		frappe.call({
+				method: "overtime.overtime.doctype.overtime.overtime.get_holidays",
+				args: {
+
+					employee: frm.doc.employee,
+					date: frm.doc.date
+				},
+				callback: function(r) {
+
+						r.message;
+						if (r.message != undefined && r.message == true){
+							frm.set_value('is_holiday',1)
+						}
+						else{
+							frm.set_value('is_holiday',0)
+						}
+						
+					}
+				});
+		
 
 		return frappe.call({
 				method: "overtime.overtime.doctype.overtime.overtime.validate_date",
@@ -316,7 +377,9 @@ frappe.ui.form.on('overtime', {
 				callback: function(r) {
 					if (!r.exc && r.message) {
 						if(r.message == "False"){
-							frappe.throw(__("You cannot enter Overtime Before Three days or after Todays date"))
+
+							console.log(323);
+							// frappe.throw(__("You cannot enter Overtime Before Three days or after Todays date"))
 						}
 						
 					}
@@ -325,3 +388,5 @@ frappe.ui.form.on('overtime', {
 	}
 
 });
+
+
